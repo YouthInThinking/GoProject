@@ -21,7 +21,17 @@ type BookSet struct {
 
 type Book struct {
 	ID uint `json:"id" gorm:"primaryKey;column:id"`
+	BookSpec
+}
 
+// TableName 设置表名，如果要使用gorm来自动创建和更新表的时候才需要被定义
+func (b *Book) TableName() string {
+	return "book"
+}
+
+//Book属性将字段拆分到不同的结构体中，便于管理和扩展
+
+type BookSpec struct {
 	//type字段 如果要使用gorm来自动创建和更新表的时候才需要被定义
 	Title  string  `json:"title" gorm:"column:title;type:varchar(200)" validate:"required"`
 	Author string  `json:"author" gorm:"column:author;type:varchar(200);index" validate:"required"`
@@ -31,13 +41,14 @@ type Book struct {
 
 // 初始化数据库
 func SetupDatebase() *gorm.DB {
-	dsn := "root:123456@tcp(172.16.160.12:3306)/test?charset=utf8mb4&parseTime=True&loc=Local"
+	dsn := "root:123456@tcp(172.16.160.12:3306)/go18?charset=utf8mb4&parseTime=True&loc=Local"
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic("failed to connect database")
 	}
 	db.AutoMigrate(&Book{}) // 自动迁移表结构
 	fmt.Println("数据库连接成功")
+
 	return db.Debug()
 }
 
@@ -54,27 +65,36 @@ func (h *BookApiHandler) ListBook(c *gin.Context) {
 
 	set := &BookSet{}
 
+	//给默认值
+	pn, ps := 1, 20
+
 	//查询书籍大小
 	pageSize := c.Query("page_size")
-	ps, err := strconv.ParseInt(pageSize, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    http.StatusBadRequest,
-			"message": "参数错误",
-		})
+	if pageSize != "" {
+		psInt, err := strconv.ParseInt(pageSize, 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"code":    http.StatusBadRequest,
+				"message": "参数错误",
+			})
+		}
+		ps = int(psInt)
 	}
 
 	//查询书籍id
 	pageNumber := c.Query("page_number")
-	pn, err := strconv.ParseInt(pageNumber, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"code":    http.StatusBadRequest,
-			"message": "参数错误",
-		})
+	if pageNumber != "" {
+		pnInt, err := strconv.ParseInt(pageNumber, 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"code":    http.StatusBadRequest,
+				"message": "参数错误",
+			})
+		}
+		pn = int(pnInt)
 	}
 
-	query := db
+	query := db.Model(&Book{}) // 指定查询模型为 Book
 
 	//查询带有关键字的书籍名称
 	kws := c.Query("keywords")
@@ -106,9 +126,9 @@ func (h *BookApiHandler) ListBook(c *gin.Context) {
 }
 
 func (h *BookApiHandler) CreateBook(c *gin.Context) {
-	bookInstance := &Book{}
+	bookSpecInstance := &BookSpec{}
 
-	if err := c.BindJSON(&bookInstance); err != nil {
+	if err := c.BindJSON(&bookSpecInstance); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code":    http.StatusBadRequest,
 			"message": err.Error(),
@@ -116,6 +136,10 @@ func (h *BookApiHandler) CreateBook(c *gin.Context) {
 		return
 	}
 
+	bookInstance := &Book{
+		//将bookSpecInstance的值赋给bookInstance
+		BookSpec: *bookSpecInstance,
+	}
 	//数据入库,补充自增ID的值
 	if err := db.Save(bookInstance).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -134,44 +158,80 @@ func (h *BookApiHandler) CreateBook(c *gin.Context) {
 
 func (h *BookApiHandler) GetBook(c *gin.Context) {
 
-	//获取请求参数中的id。
-	id := c.Param("id")
+	//定义book结构体实例，读取body中的参数
+	bookInstance := &Book{}
 
-	//将id转换为int64类型。
-	strconv.ParseInt(id, 10, 64)
+	//从数据库中获取一个对象
+	if err := db.Where("id = ?", c.Param("id")).Take(bookInstance).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"code":    http.StatusNotFound,
+			"message": err.Error(),
+		})
+		return
+	}
+	//从数据库成功获取之后返回数据
 	c.JSON(200, gin.H{
-		"message": "Book with id: " + id,
+		"message": "Book with id: " + c.Param("id") + " is: " + bookInstance.Title,
 	})
 }
 func (h *BookApiHandler) UpdateBook(c *gin.Context) {
 
 	//获取请求参数中的id。
-	id := c.Param("id")
+	idStr := c.Param("id")
 
 	//将id转换为int64类型。
-	strconv.ParseInt(id, 10, 64)
-	c.JSON(200, gin.H{
-		"message": "Book with id: " + id,
-	})
-
-	bookInstance := &Book{}
-	if err := c.BindJSON(&bookInstance); err != nil {
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"code":    http.StatusBadRequest,
 			"message": err.Error(),
 		})
 		return
 	}
+	c.JSON(200, gin.H{
+		"message": "Book with id: " + idStr,
+	})
+
+	//定义book结构体实例，读取body中的参数
+	bookInstance := &Book{
+		ID: uint(id),
+	}
+
+	if err := c.BindJSON(&bookInstance.BookSpec); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    http.StatusBadRequest,
+			"message": err.Error(),
+		})
+		return
+	}
+
+	//从数据中获取数据
+	if err := db.Where("id = ?", bookInstance.ID).Updates(&bookInstance).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"code":    http.StatusNotFound,
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, bookInstance)
+
 }
 
 func (h *BookApiHandler) DeleteBook(c *gin.Context) {
-	//获取请求参数中的id。
-	id := c.Param("id")
 
-	//将id转换为int64类型。
-	strconv.ParseInt(id, 10, 64)
-	c.JSON(200, gin.H{
-		"message": "Book with id: " + id,
+	if err := db.Where("id = ?", c.Param("id")).Delete(&Book{}).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"code":    http.StatusNotFound,
+			"message": err.Error(),
+		})
+		return
+	}
+
+	//删除成功后返回信息
+	c.JSON(http.StatusNoContent, gin.H{
+		"code":    http.StatusNoContent,
+		"message": "Book deleted successfully",
 	})
 }
 
