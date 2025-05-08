@@ -11,6 +11,14 @@ import (
 	"gorm.io/gorm"
 )
 
+type BookSet struct {
+	//总共有多少个
+	Total int64 `json:"total"`
+
+	//
+	Items []*Book `json:"items"`
+}
+
 type Book struct {
 	ID uint `json:"id" gorm:"primaryKey;column:id"`
 
@@ -28,7 +36,9 @@ func SetupDatebase() *gorm.DB {
 	if err != nil {
 		panic("failed to connect database")
 	}
-	return db
+	db.AutoMigrate(&Book{}) // 自动迁移表结构
+	fmt.Println("数据库连接成功")
+	return db.Debug()
 }
 
 var db = SetupDatebase()
@@ -41,6 +51,10 @@ var h = &BookApiHandler{}
 
 func (h *BookApiHandler) ListBook(c *gin.Context) {
 	//c.JSON(http.StatusOK, h.Books)
+
+	set := &BookSet{}
+
+	//查询书籍大小
 	pageSize := c.Query("page_size")
 	ps, err := strconv.ParseInt(pageSize, 10, 64)
 	if err != nil {
@@ -49,6 +63,8 @@ func (h *BookApiHandler) ListBook(c *gin.Context) {
 			"message": "参数错误",
 		})
 	}
+
+	//查询书籍id
 	pageNumber := c.Query("page_number")
 	pn, err := strconv.ParseInt(pageNumber, 10, 64)
 	if err != nil {
@@ -58,15 +74,24 @@ func (h *BookApiHandler) ListBook(c *gin.Context) {
 		})
 	}
 
+	query := db
+
+	//查询带有关键字的书籍名称
+	kws := c.Query("keywords")
+
+	if kws != "" {
+		query = query.Where("title LIKE ?", "%"+kws+"%")
+	}
+
 	//设置分页参数
 	offset := (pn - 1) * ps
 
 	//定义一个空的bookList切片，用于存储查询结果。
-	bookList := []Book{}
+	//bookList := []Book{}
 
 	//db.Find接口用于查询数据库中所有的book数据。
 	//通过控制offset limit实现分页
-	if err := db.Find(&bookList).Offset(int(offset)).Limit(int(ps)).Error; err != nil {
+	if err := query.Count(&set.Total).Offset(int(offset)).Limit(int(ps)).Find(&set.Items).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"code":    http.StatusInternalServerError,
 			"message": err.Error(),
@@ -77,7 +102,7 @@ func (h *BookApiHandler) ListBook(c *gin.Context) {
 	//获取总数，总共有多少个, 总共多少页
 
 	//返回查询结果。
-	c.JSON(http.StatusOK, bookList)
+	c.JSON(http.StatusOK, set)
 }
 
 func (h *BookApiHandler) CreateBook(c *gin.Context) {
