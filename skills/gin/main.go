@@ -5,11 +5,17 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 func main() {
 	// 设置 Gin 模式为发布模式
 	// gin.SetMode(gin.ReleaseMode)
+
+	// 配置日志格式
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	log.Print("Starting server...")
 	server := gin.Default()
 
 	if err := server.Run(":8080"); err != nil {
