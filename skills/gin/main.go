@@ -14,8 +14,8 @@ func main() {
 	// gin.SetMode(gin.ReleaseMode)
 
 	// 配置日志格式
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	log.Print("Starting server...")
+	zerolog.TimeFieldFormat = zerolog.TimestampFunc().Local().Format("2006.01.02T15:04:05+0800")
+	log.Info().Msgf("Starting server...")
 	server := gin.Default()
 
 	if err := server.Run(":8080"); err != nil {
