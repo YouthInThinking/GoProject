@@ -1,9 +1,18 @@
 package config
 
+import (
+	"github.com/infraboard/mcube/v2/tools/pretty"
+)
+
 // 此对象是程序的应用服务类型配置
 type Config struct {
 	Application *application `toml:"app" yaml:"app" json:"app"`
 	MySQL       *mySQL       `toml:"mysql" yaml:"mysql" json:"mysql"`
+}
+
+func (c *Config) String() string {
+	//return fmt.Sprintf("Config{Application: %v, MySQL: %v}", c.Application, c.MySQL)
+	return pretty.ToJSON(c)
 }
 
 // 此对象是程序的程序类型配置
