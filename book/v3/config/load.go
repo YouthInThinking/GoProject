@@ -5,6 +5,7 @@ import (
 
 	"github.com/caarlos0/env"
 	"gopkg.in/yaml.v3"
+	"gorm.io/gorm"
 )
 
 //配置加载
@@ -23,6 +24,10 @@ func C() *Config {
 	return config
 }
 
+func DB() *gorm.DB {
+	return C().MySQL.GetDB()
+}
+
 //定义一个函数，用于将外部的文件加载到config配置属性中
 
 func LoadConfigFromYaml(configPath string) error {
@@ -33,12 +38,12 @@ func LoadConfigFromYaml(configPath string) error {
 
 	//然后将读取的内容进行解析，赋值给默认全局变量config中。这样就能保证在后续的调用中，都能使用到已经加载好的配置信息。同时也能避免重复加载带来的问题，提高代码的效率和稳定性。
 	config = C()
-	return yaml.Unmarshal(content, &config)
+	return yaml.Unmarshal(content, config)
 }
 
 // 从环境变量中读取配置
 // config.MySQL.DB = os.Getenv("MYSQL_DB")
 func LoadConfigFromEnv() error {
 	config = C()
-	return env.Parse(&config)
+	return env.Parse(config)
 }
