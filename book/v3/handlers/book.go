@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/YouthInThinking/GoProject/book/v3/config"
+	"github.com/YouthInThinking/GoProject/book/v3/controllers"
 	"github.com/YouthInThinking/GoProject/book/v3/models"
 	"github.com/gin-gonic/gin"
 )
@@ -116,15 +117,22 @@ func (h *BookApiHandler) createBook(c *gin.Context) {
 
 func (h *BookApiHandler) getBook(c *gin.Context) {
 	// 创建一个Book属性对象实例。
-	bookInstences := &models.Book{}
-	if err := config.DB().Where("id = ?", c.Param("id")).Take(&bookInstences).Error; err != nil {
+	// bookInstences := &models.Book{}
+	// if err := config.DB().Where("id = ?", c.Param("id")).Take(&bookInstences).Error; err != nil {
+	// 	c.JSON(http.StatusNotFound, gin.H{
+	// 		"code":    http.StatusNotFound,
+	// 		"message": "Book not found",
+	// 	})
+	// 	return
+	// }
+	book, err := controllers.Book.GetBooks(c, controllers.NewGetBookRequest(c.Param("id")))
+	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"code":    http.StatusNotFound,
-			"message": "Book not found",
+			"message": err.Error(),
 		})
-		return
 	}
-	c.JSON(http.StatusOK, bookInstences)
+	c.JSON(http.StatusOK, book)
 }
 
 func (h *BookApiHandler) updateBook(c *gin.Context) {
