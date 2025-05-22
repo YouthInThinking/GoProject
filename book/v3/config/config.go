@@ -3,6 +3,9 @@ package config
 import (
 	"fmt"
 	"io"
+	"log"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -39,20 +42,22 @@ type mySQL struct {
 
 // 使用结构体嵌套的方式定义全局变量配置结构体
 type Config struct {
-	Application     *application     `toml:"app" yaml:"app" json:"app"`
-	MySQL           *mySQL           `toml:"mysql" yaml:"mysql" json:"mysql"`
-	LogRotateConfig *logRotateConfig `toml:"log_rotate_config" yaml:"log_rotate_config" json:"log_rotate_config"`
-	Log
+	Application *application `toml:"app" yaml:"app" json:"app"`
+	MySQL       *mySQL       `toml:"mysql" yaml:"mysql" json:"mysql"`
+	//	LogRotateConfig *logRotateConfig `toml:"log_rotate_config" yaml:"log_rotate_config" json:"log_rotate_config"`
+	Log *LogConfig `toml:"log" yaml:"log" json:"log"`
 }
 
-//增加日志属性
-
-type Log struct {
+// 增加日志属性
+// 日志配置
+type LogConfig struct {
+	//Level  string           `yaml:"level" env:"LOG_LEVEL"`
 	//定义日志属性
-	Level zerolog.Level `json:"level" yaml:"level" toml:"level" env:"LOG_LEVEL"`
+	Level string `json:"level" yaml:"level" toml:"level" env:"LOG_LEVEL"`
 	//Logger zerolog.Logger `
 	logger *zerolog.Logger
 	lock   sync.Mutex
+	Rotate *logRotateConfig `json:"rotate" yaml:"rotate" toml:"totate" env:"LOG_ROTATE"`
 }
 
 type logRotateConfig struct {
@@ -78,12 +83,15 @@ func Defalut() *Config {
 			Password: "123456",
 			DB:       "go18",
 		},
-		LogRotateConfig: &logRotateConfig{
-			FileName:   "app.log",
-			MaxSize:    10,
-			MaxBackups: 3,
-			MaxAge:     28,
-			Compress:   true,
+		Log: &LogConfig{
+			Level: "debug",
+			Rotate: &logRotateConfig{
+				FileName:   "logs/book.log",
+				MaxSize:    100,
+				MaxBackups: 5,
+				MaxAge:     30,
+				Compress:   true,
+			},
 		},
 	}
 }
@@ -92,7 +100,7 @@ func (c *Config) String() string {
 	return pretty.ToJSON(c)
 }
 
-func (c *Log) ConsoleWriter() io.Writer {
+func (l *LogConfig) ConsoleWriter() io.Writer {
 	output := zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {
 		w.NoColor = false
 		w.TimeFormat = time.RFC3339
@@ -112,26 +120,36 @@ func (c *Log) ConsoleWriter() io.Writer {
 	return output
 }
 
-func (l *Log) SetLogger(logger zerolog.Logger) {
+func (l *LogConfig) SetLogger(logger zerolog.Logger) {
 	l.logger = &logger
 }
 
-func (l *Log) Logger() *zerolog.Logger {
-	l.lock.Lock()
-	defer l.lock.Unlock()
-	lumberjackLogger := &lumberjack.Logger{
-		Filename:   config.LogRotateConfig.FileName,
-		MaxSize:    config.LogRotateConfig.MaxSize,
-		MaxBackups: config.LogRotateConfig.MaxBackups,
-		MaxAge:     config.LogRotateConfig.MaxAge,
-		Compress:   config.LogRotateConfig.Compress,
+func (c *Config) Logger() *zerolog.Logger {
+	// 解析日志级别
+	logLevel, err := zerolog.ParseLevel(c.Log.Level)
+	if err != nil {
+		log.Fatal("invalid log level  %w", err)
 	}
-	multi := zerolog.MultiLevelWriter(l.ConsoleWriter(), lumberjackLogger)
+	// 创建日志目录
+	if err := os.MkdirAll(filepath.Dir(c.Log.Rotate.FileName), 0755); err != nil {
+		log.Fatal("failed to create log directory: %w", err)
+	}
 
-	if l.logger == nil {
-		l.SetLogger(zerolog.New(multi).Level(l.Level).With().Caller().Timestamp().Logger())
+	c.Log.lock.Lock()
+	defer c.Log.lock.Unlock()
+	lumberjackLogger := &lumberjack.Logger{
+		Filename:   config.Log.Rotate.FileName,
+		MaxSize:    config.Log.Rotate.MaxSize,
+		MaxBackups: config.Log.Rotate.MaxBackups,
+		MaxAge:     config.Log.Rotate.MaxAge,
+		Compress:   config.Log.Rotate.Compress,
 	}
-	return l.logger
+	multi := zerolog.MultiLevelWriter(c.Log.ConsoleWriter(), lumberjackLogger)
+
+	if c.Log.logger == nil {
+		c.Log.SetLogger(zerolog.New(multi).Level(logLevel).With().Caller().Timestamp().Logger())
+	}
+	return c.Log.logger
 }
 
 //开始初始化数据库连接

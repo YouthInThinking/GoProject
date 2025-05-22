@@ -30,7 +30,7 @@ func DB() *gorm.DB {
 }
 
 func L() *zerolog.Logger {
-	return C().Log.Logger()
+	return C().Logger()
 }
 
 //定义一个函数，用于将外部的文件加载到config配置属性中

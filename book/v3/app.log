@@ -1,2 +1,1 @@
-{"level":"debug","caller":"/Users/youtharethinking/Documents/go_Project/project/GoProject/book/v3/controllers/book.go:29","time":"2025-05-22T23:15:21+08:00","message":"GetBooks: 3"}
-{"level":"error","caller":"/Users/youtharethinking/Documents/go_Project/project/GoProject/book/v3/controllers/book.go:29","time":"2025-05-22T23:16:01+08:00","message":"GetBooks: 3"}
+{"level":"error","caller":"/Users/youtharethinking/Documents/go_Project/project/GoProject/book/v3/controllers/book.go:29","time":"2025-05-22T23:24:05+08:00","message":"GetBooks: 3"}

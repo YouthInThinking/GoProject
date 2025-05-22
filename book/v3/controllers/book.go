@@ -27,7 +27,7 @@ func (c *BookController) GetBooks(ctx context.Context, in *GetBookRequest) (*mod
 	// 实现获取所有书籍的逻辑
 
 	config.L().Error().Msgf("GetBooks: %d", in.BookNumber)
-
+	config.L().Debug().Msgf("GetBooks: %d", in.BookNumber)
 	bookInstence := &models.Book{}
 	if err := config.DB().Where("id = ?", in.BookNumber).First(bookInstence).Error; err != nil {
 		return nil, err
