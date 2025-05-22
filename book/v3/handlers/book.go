@@ -125,7 +125,13 @@ func (h *BookApiHandler) getBook(c *gin.Context) {
 	// 	})
 	// 	return
 	// }
-	book, err := controllers.Book.GetBooks(c, controllers.NewGetBookRequest(c.Param("id")))
+	bnInt, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(400, gin.H{"code": 400, "message": err.Error()})
+		return
+	}
+
+	book, err := controllers.Book.GetBooks(c, controllers.NewGetBookRequest(int(bnInt)))
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"code":    http.StatusNotFound,
@@ -150,7 +156,7 @@ func (h *BookApiHandler) updateBook(c *gin.Context) {
 	//读取body中的参数
 
 	bookInstance := &models.Book{
-		ID: int(isbn),
+		Id: uint(isbn),
 	}
 
 	if err := c.BindJSON(&bookInstance.BookSpec); err != nil {
@@ -161,7 +167,7 @@ func (h *BookApiHandler) updateBook(c *gin.Context) {
 		return
 	}
 
-	if err := config.DB().Where("id = ?", bookInstance.ID).Updates(bookInstance).Error; err != nil {
+	if err := config.DB().Where("id = ?", bookInstance.Id).Updates(bookInstance).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"code":    http.StatusInternalServerError,
 			"message": err.Error(),

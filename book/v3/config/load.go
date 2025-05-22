@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/caarlos0/env"
+	"github.com/rs/zerolog"
 	"gopkg.in/yaml.v3"
 	"gorm.io/gorm"
 )
@@ -26,6 +27,10 @@ func C() *Config {
 
 func DB() *gorm.DB {
 	return C().MySQL.GetDB()
+}
+
+func L() *zerolog.Logger {
+	return C().Log.Logger()
 }
 
 //定义一个函数，用于将外部的文件加载到config配置属性中

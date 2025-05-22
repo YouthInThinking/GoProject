@@ -2,10 +2,15 @@ package config
 
 import (
 	"fmt"
+	"io"
+	"strings"
 	"sync"
+	"time"
 
 	"github.com/YouthInThinking/GoProject/book/v3/models"
 	"github.com/infraboard/mcube/v2/tools/pretty"
+	"github.com/rs/zerolog"
+	"gopkg.in/natefinch/lumberjack.v2"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -34,15 +39,36 @@ type mySQL struct {
 
 // 使用结构体嵌套的方式定义全局变量配置结构体
 type Config struct {
-	Application *application `toml:"app" yaml:"app" json:"app"`
-	MySQL       *mySQL       `toml:"mysql" yaml:"mysql" json:"mysql"`
+	Application     *application     `toml:"app" yaml:"app" json:"app"`
+	MySQL           *mySQL           `toml:"mysql" yaml:"mysql" json:"mysql"`
+	LogRotateConfig *logRotateConfig `toml:"log_rotate_config" yaml:"log_rotate_config" json:"log_rotate_config"`
+	Log
+}
+
+//增加日志属性
+
+type Log struct {
+	//定义日志属性
+	Level zerolog.Level `json:"level" yaml:"level" toml:"level" env:"LOG_LEVEL"`
+	//Logger zerolog.Logger `
+	logger *zerolog.Logger
+	lock   sync.Mutex
+}
+
+type logRotateConfig struct {
+	FileName   string `json:"filename" yaml:"filename" toml:"filename" env:"LOG_FILENAME"`
+	MaxSize    int    `json:"max_size" yaml:"max_size" toml:"max_size" env:"LOG_MAX_SIZE"`
+	MaxBackups int    `json:"max_backups" yaml:"max_backups" toml:"max_backups" env:"LOG_MAX_BACKUPS"`
+	MaxAge     int    `json:"max_age" yaml:"max_age" toml:"max_age" env:"LOG_MAX_AGE"`
+	Compress   bool   `json:"compress" yaml:"compress" toml:"compress" env:"LOG_COMPRESS"`
 }
 
 // 定义构造函数，提供外部调用默认的配置文件
 func Defalut() *Config {
+
 	return &Config{
 		Application: &application{
-			Host: "localhost",
+			Host: "127.0.0.1",
 			Port: 8080,
 		},
 		MySQL: &mySQL{
@@ -52,11 +78,60 @@ func Defalut() *Config {
 			Password: "123456",
 			DB:       "go18",
 		},
+		LogRotateConfig: &logRotateConfig{
+			FileName:   "app.log",
+			MaxSize:    10,
+			MaxBackups: 3,
+			MaxAge:     28,
+			Compress:   true,
+		},
 	}
 }
 
 func (c *Config) String() string {
 	return pretty.ToJSON(c)
+}
+
+func (c *Log) ConsoleWriter() io.Writer {
+	output := zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {
+		w.NoColor = false
+		w.TimeFormat = time.RFC3339
+	})
+	output.FormatLevel = func(i interface{}) string {
+		return strings.ToUpper(fmt.Sprintf("%-6s", i))
+	}
+	output.FormatMessage = func(i interface{}) string {
+		return fmt.Sprintf("%s", i)
+	}
+	output.FormatCaller = func(i interface{}) string {
+		return fmt.Sprintf("%s", i)
+	}
+	output.FormatLevel = func(i interface{}) string {
+		return strings.ToUpper(fmt.Sprintf("%-6s", i))
+	}
+	return output
+}
+
+func (l *Log) SetLogger(logger zerolog.Logger) {
+	l.logger = &logger
+}
+
+func (l *Log) Logger() *zerolog.Logger {
+	l.lock.Lock()
+	defer l.lock.Unlock()
+	lumberjackLogger := &lumberjack.Logger{
+		Filename:   config.LogRotateConfig.FileName,
+		MaxSize:    config.LogRotateConfig.MaxSize,
+		MaxBackups: config.LogRotateConfig.MaxBackups,
+		MaxAge:     config.LogRotateConfig.MaxAge,
+		Compress:   config.LogRotateConfig.Compress,
+	}
+	multi := zerolog.MultiLevelWriter(l.ConsoleWriter(), lumberjackLogger)
+
+	if l.logger == nil {
+		l.SetLogger(zerolog.New(multi).Level(l.Level).With().Caller().Timestamp().Logger())
+	}
+	return l.logger
 }
 
 //开始初始化数据库连接

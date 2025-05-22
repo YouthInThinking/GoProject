@@ -14,7 +14,7 @@ type CommentController struct {
 }
 type AddCommentRequest struct {
 	// 定义添加评论请求的结构体
-	BookNumber string
+	BookNumber int
 }
 
 func (c *CommentController) AddComment(ctx context.Context, in *AddCommentRequest) (*models.Comment, error) {

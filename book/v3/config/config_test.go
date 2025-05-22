@@ -26,3 +26,7 @@ func TestLoadConfigFromEnv(t *testing.T) {
 	}
 	t.Log(config.C())
 }
+
+func TestInitLogger(t *testing.T) {
+
+}

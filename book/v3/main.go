@@ -11,9 +11,7 @@ import (
 func main() {
 
 	server := gin.Default()
-
 	handlers.Book.Registry(server)
-
 	if err := server.Run(":8080"); err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
