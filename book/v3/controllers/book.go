@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/YouthInThinking/GoProject/book/v3/config"
 	"github.com/YouthInThinking/GoProject/book/v3/models"
@@ -27,7 +28,12 @@ func (c *BookController) GetBooks(ctx context.Context, in *GetBookRequest) (*mod
 	// 实现获取所有书籍的逻辑
 
 	config.L().Error().Msgf("GetBooks: %d", in.BookNumber)
+	fmt.Printf("ERROR Final Log Level: %#v\n", config.L().GetLevel())
 	config.L().Debug().Msgf("GetBooks: %d", in.BookNumber)
+	fmt.Printf("DEBUG Final Log Level: %#v\n", config.L().GetLevel())
+	// 验证配置
+	config.L().Info().Msg("logger initialization completed")
+	fmt.Printf("INFO Final Log Level: %#v\n", config.L().GetLevel())
 	bookInstence := &models.Book{}
 	if err := config.DB().Where("id = ?", in.BookNumber).First(bookInstence).Error; err != nil {
 		return nil, err

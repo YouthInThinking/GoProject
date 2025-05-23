@@ -2,8 +2,6 @@ package config
 
 import (
 	"fmt"
-	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -45,16 +43,15 @@ type Config struct {
 	Application *application `toml:"app" yaml:"app" json:"app"`
 	MySQL       *mySQL       `toml:"mysql" yaml:"mysql" json:"mysql"`
 	//	LogRotateConfig *logRotateConfig `toml:"log_rotate_config" yaml:"log_rotate_config" json:"log_rotate_config"`
-	Log *LogConfig `toml:"log" yaml:"log" json:"log"`
+	Log *logConfig `toml:"log" yaml:"log" json:"log"`
 }
 
 // 增加日志属性
 // 日志配置
-type LogConfig struct {
+type logConfig struct {
 	//Level  string           `yaml:"level" env:"LOG_LEVEL"`
 	//定义日志属性
-	Level string `json:"level" yaml:"level" toml:"level" env:"LOG_LEVEL"`
-	//Logger zerolog.Logger `
+	Level  string `json:"level" yaml:"level" toml:"level" env:"LOG_LEVEL"`
 	logger *zerolog.Logger
 	lock   sync.Mutex
 	Rotate *logRotateConfig `json:"rotate" yaml:"rotate" toml:"totate" env:"LOG_ROTATE"`
@@ -83,7 +80,7 @@ func Defalut() *Config {
 			Password: "123456",
 			DB:       "go18",
 		},
-		Log: &LogConfig{
+		Log: &logConfig{
 			Level: "debug",
 			Rotate: &logRotateConfig{
 				FileName:   "logs/book.log",
@@ -100,10 +97,17 @@ func (c *Config) String() string {
 	return pretty.ToJSON(c)
 }
 
-func (l *LogConfig) ConsoleWriter() io.Writer {
+func (l *logConfig) ConsoleWriter() zerolog.ConsoleWriter {
 	output := zerolog.NewConsoleWriter(func(w *zerolog.ConsoleWriter) {
 		w.NoColor = false
 		w.TimeFormat = time.RFC3339
+		w.NoColor = false
+		w.PartsOrder = []string{
+			zerolog.TimestampFieldName,
+			zerolog.LevelFieldName,
+			zerolog.CallerFieldName,
+			zerolog.MessageFieldName,
+		}
 	})
 	output.FormatLevel = func(i interface{}) string {
 		return strings.ToUpper(fmt.Sprintf("%-6s", i))
@@ -120,35 +124,39 @@ func (l *LogConfig) ConsoleWriter() io.Writer {
 	return output
 }
 
-func (l *LogConfig) SetLogger(logger zerolog.Logger) {
+func (l *logConfig) SetLogger(logger zerolog.Logger) {
 	l.logger = &logger
 }
 
 func (c *Config) Logger() *zerolog.Logger {
-	// 解析日志级别
-	logLevel, err := zerolog.ParseLevel(c.Log.Level)
-	if err != nil {
-		log.Fatal("invalid log level  %w", err)
-	}
-	// 创建日志目录
-	if err := os.MkdirAll(filepath.Dir(c.Log.Rotate.FileName), 0755); err != nil {
-		log.Fatal("failed to create log directory: %w", err)
-	}
 
 	c.Log.lock.Lock()
 	defer c.Log.lock.Unlock()
+	// 解析日志级别
+	logLevel, err := zerolog.ParseLevel(strings.ToLower(c.Log.Level))
+	if err != nil {
+		fmt.Printf("invalid log level  %v", err)
+	}
+	// 创建日志目录
+	if err := os.MkdirAll(filepath.Dir(c.Log.Rotate.FileName), 0755); err != nil {
+		fmt.Printf("failed to create log directory: %v", err)
+	}
+
 	lumberjackLogger := &lumberjack.Logger{
-		Filename:   config.Log.Rotate.FileName,
-		MaxSize:    config.Log.Rotate.MaxSize,
-		MaxBackups: config.Log.Rotate.MaxBackups,
-		MaxAge:     config.Log.Rotate.MaxAge,
-		Compress:   config.Log.Rotate.Compress,
+		Filename:   c.Log.Rotate.FileName,
+		MaxSize:    c.Log.Rotate.MaxSize,
+		MaxBackups: c.Log.Rotate.MaxBackups,
+		MaxAge:     c.Log.Rotate.MaxAge,
+		Compress:   c.Log.Rotate.Compress,
 	}
 	multi := zerolog.MultiLevelWriter(c.Log.ConsoleWriter(), lumberjackLogger)
 
 	if c.Log.logger == nil {
 		c.Log.SetLogger(zerolog.New(multi).Level(logLevel).With().Caller().Timestamp().Logger())
 	}
+
+	//
+
 	return c.Log.logger
 }
 
