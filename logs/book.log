@@ -1,0 +1,2 @@
+{"level":"error","caller":"/Users/youtharethinking/Documents/go_Project/project/GoProject/book/v3/controllers/book.go:30","time":"2025-05-24T00:13:26+08:00","message":"GetBooks: 3"}
+{"level":"error","caller":"/Users/youtharethinking/Documents/go_Project/project/GoProject/book/v3/controllers/book.go:30","time":"2025-05-24T00:13:27+08:00","message":"GetBooks: 3"}

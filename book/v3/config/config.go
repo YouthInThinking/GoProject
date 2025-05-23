@@ -54,7 +54,7 @@ type logConfig struct {
 	Level  string `json:"level" yaml:"level" toml:"level" env:"LOG_LEVEL"`
 	logger *zerolog.Logger
 	lock   sync.Mutex
-	Rotate *logRotateConfig `json:"rotate" yaml:"rotate" toml:"totate" env:"LOG_ROTATE"`
+	Rotate *logRotateConfig `json:"rotate" yaml:"rotate" toml:"rotate" env:"LOG_ROTATE"`
 }
 
 type logRotateConfig struct {
@@ -80,7 +80,7 @@ func Defalut() *Config {
 			Password: "123456",
 			DB:       "go18",
 		},
-		Log: &logConfig{
+		Log: &logConfig{ //在默认配置中，Log 和 Rotate 都是指针类型;当 YAML 解析时，如果未正确处理指针嵌套结构，会导致字段覆盖失败
 			Level: "debug",
 			Rotate: &logRotateConfig{
 				FileName:   "logs/book.log",
@@ -133,10 +133,17 @@ func (c *Config) Logger() *zerolog.Logger {
 	c.Log.lock.Lock()
 	defer c.Log.lock.Unlock()
 	// 解析日志级别
-	logLevel, err := zerolog.ParseLevel(strings.ToLower(c.Log.Level))
+	logLevel, err := zerolog.ParseLevel(c.Log.Level)
+	// 调试输出当前配置值
+	fmt.Printf("[DEBUG] Log Level from Config: %s\n", c.Log.Level)
+	fmt.Printf("[DEBUG] Log File: %s\n", c.Log.Rotate.FileName)
+	/// 解析日志级别（强制小写）
+	//logLevel, err := zerolog.ParseLevel(strings.ToLower(c.Log.Level))
 	if err != nil {
-		fmt.Printf("invalid log level  %v", err)
+		fmt.Printf("Invalid log level '%s': %v\n", c.Log.Level, err)
+		logLevel = zerolog.DebugLevel // Fallback 到默认级别
 	}
+
 	// 创建日志目录
 	if err := os.MkdirAll(filepath.Dir(c.Log.Rotate.FileName), 0755); err != nil {
 		fmt.Printf("failed to create log directory: %v", err)
@@ -155,8 +162,7 @@ func (c *Config) Logger() *zerolog.Logger {
 		c.Log.SetLogger(zerolog.New(multi).Level(logLevel).With().Caller().Timestamp().Logger())
 	}
 
-	//
-
+	fmt.Printf("Final Log Level: %s (%d)\n", logLevel.String(), logLevel)
 	return c.Log.logger
 }
 

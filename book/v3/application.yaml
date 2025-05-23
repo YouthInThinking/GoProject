@@ -9,9 +9,9 @@ mysql:
   password: "123456"
   debug: true
 log:
-  level: error
+  level: "warn"
   rotate:
-    filename: "/GoProject/book.log"
+    filename: "../../logs/book.log"
     max_size: 1
     max_backups: 1
     max_age: 1

@@ -1,9 +1,7 @@
-{"level":"error","caller":"/Users/youtharethinking/Documents/go_Project/project/GoProject/book/v3/controllers/book.go:30","time":"2025-05-23T21:20:10+08:00","message":"GetBooks: 3"}
-{"level":"debug","caller":"/Users/youtharethinking/Documents/go_Project/project/GoProject/book/v3/controllers/book.go:32","time":"2025-05-23T21:20:10+08:00","message":"GetBooks: 3"}
-{"level":"info","caller":"/Users/youtharethinking/Documents/go_Project/project/GoProject/book/v3/controllers/book.go:35","time":"2025-05-23T21:20:10+08:00","message":"logger initialization completed"}
-{"level":"error","caller":"/Users/youtharethinking/Documents/go_Project/project/GoProject/book/v3/controllers/book.go:30","time":"2025-05-23T21:26:51+08:00","message":"GetBooks: 3"}
-{"level":"debug","caller":"/Users/youtharethinking/Documents/go_Project/project/GoProject/book/v3/controllers/book.go:32","time":"2025-05-23T21:26:51+08:00","message":"GetBooks: 3"}
-{"level":"info","caller":"/Users/youtharethinking/Documents/go_Project/project/GoProject/book/v3/controllers/book.go:35","time":"2025-05-23T21:26:51+08:00","message":"logger initialization completed"}
-{"level":"error","caller":"/Users/youtharethinking/Documents/go_Project/project/GoProject/book/v3/controllers/book.go:30","time":"2025-05-23T21:35:17+08:00","message":"GetBooks: 3"}
-{"level":"debug","caller":"/Users/youtharethinking/Documents/go_Project/project/GoProject/book/v3/controllers/book.go:32","time":"2025-05-23T21:35:17+08:00","message":"GetBooks: 3"}
-{"level":"info","caller":"/Users/youtharethinking/Documents/go_Project/project/GoProject/book/v3/controllers/book.go:35","time":"2025-05-23T21:35:17+08:00","message":"logger initialization completed"}
+{"level":"info","caller":"/Users/youtharethinking/Documents/go_Project/project/GoProject/book/v3/main.go:25","time":"2025-05-24T00:12:08+08:00","message":"Configuration loaded"}
+{"level":"error","caller":"/Users/youtharethinking/Documents/go_Project/project/GoProject/book/v3/controllers/book.go:30","time":"2025-05-24T00:12:13+08:00","message":"GetBooks: 3"}
+{"level":"debug","caller":"/Users/youtharethinking/Documents/go_Project/project/GoProject/book/v3/controllers/book.go:33","time":"2025-05-24T00:12:13+08:00","message":"GetBooks: 3"}
+{"level":"info","caller":"/Users/youtharethinking/Documents/go_Project/project/GoProject/book/v3/controllers/book.go:36","time":"2025-05-24T00:12:13+08:00","message":"logger initialization completed"}
+{"level":"error","caller":"/Users/youtharethinking/Documents/go_Project/project/GoProject/book/v3/controllers/book.go:30","time":"2025-05-24T00:12:13+08:00","message":"GetBooks: 3"}
+{"level":"debug","caller":"/Users/youtharethinking/Documents/go_Project/project/GoProject/book/v3/controllers/book.go:33","time":"2025-05-24T00:12:13+08:00","message":"GetBooks: 3"}
+{"level":"info","caller":"/Users/youtharethinking/Documents/go_Project/project/GoProject/book/v3/controllers/book.go:36","time":"2025-05-24T00:12:13+08:00","message":"logger initialization completed"}
