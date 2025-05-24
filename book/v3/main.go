@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/YouthInThinking/GoProject/book/v3/config"
+	"github.com/YouthInThinking/GoProject/book/v3/exception"
 	"github.com/YouthInThinking/GoProject/book/v3/handlers"
 	"github.com/gin-gonic/gin"
 )
@@ -25,10 +26,13 @@ func init() {
 }
 func main() {
 
-	server := gin.Default()
+	server := gin.New()
+	server.Use(gin.Logger(), exception.Recovery())
 	handlers.Book.Registry(server)
-	if err := server.Run(":8080"); err != nil {
-		fmt.Println(err.Error())
+	ac := config.C().Application
+	// 启动服务
+	if err := server.Run(fmt.Sprintf("%s:%d", ac.Host, ac.Port)); err != nil {
+		fmt.Println(err)
 		os.Exit(1)
 	}
 }
