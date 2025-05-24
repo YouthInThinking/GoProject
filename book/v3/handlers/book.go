@@ -7,6 +7,7 @@ import (
 	"github.com/YouthInThinking/GoProject/book/v3/config"
 	"github.com/YouthInThinking/GoProject/book/v3/controllers"
 	"github.com/YouthInThinking/GoProject/book/v3/models"
+	"github.com/YouthInThinking/GoProject/book/v3/response"
 	"github.com/gin-gonic/gin"
 )
 
@@ -31,10 +32,12 @@ func (h *BookApiHandler) listBook(c *gin.Context) {
 	if pageNumber != "" {
 		pnInt, err := strconv.ParseInt(pageNumber, 10, 64)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
+
+			/* 		c.JSON(http.StatusBadRequest, gin.H{
 				"code":    http.StatusBadRequest,
 				"message": err.Error(),
-			})
+			}) */
+			response.Failed(c, err)
 			return
 		}
 		// 如果查询参数有效，则使用查询参数的值。否则，使用默认值。
@@ -45,10 +48,11 @@ func (h *BookApiHandler) listBook(c *gin.Context) {
 	if pageSize != "" {
 		psInt, err := strconv.ParseInt(pageSize, 10, 64)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
+			/* 		c.JSON(http.StatusBadRequest, gin.H{
 				"code":    http.StatusBadRequest,
 				"message": err.Error(),
-			})
+			}) */
+			response.Failed(c, err)
 			return
 		}
 
@@ -68,18 +72,22 @@ func (h *BookApiHandler) listBook(c *gin.Context) {
 	//根据book对象进行分页查询，逻辑就是先查总数，再从总数上偏移当量，限制每次查询的记录数，在此之内获取所有复合条件的记录。
 	//如果查询失败，就返回错误信息
 	if err := query.Count(&set.Total).Offset((pn - 1) * ps).Limit(ps).Find(&set.Items).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		/* 		c.JSON(http.StatusInternalServerError, gin.H{
 			"code":    http.StatusInternalServerError,
 			"message": err.Error(),
-		})
+		}) */
+		response.Failed(c, err)
 		return
+	} else {
+		response.OK(c, set)
 	}
 
 	//如果查询成功就返回书籍属性信息
-	c.JSON(http.StatusOK, gin.H{
+	/* 	c.JSON(http.StatusOK, gin.H{
 		"code": http.StatusOK,
 		"data": set,
-	})
+	}) */
+
 }
 
 func (h *BookApiHandler) createBook(c *gin.Context) {
@@ -89,26 +97,30 @@ func (h *BookApiHandler) createBook(c *gin.Context) {
 
 	// 获取BookSpec对象实例的body数据。如果获取失败，就返回错误信息。
 	if err := c.BindJSON(bookSpecInstences); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		/* 		c.JSON(http.StatusBadRequest, gin.H{
 			"code":    http.StatusBadRequest,
 			"message": err.Error(),
-		})
+		}) */
+		response.Failed(c, err)
 		return
 	}
 
 	book, err := controllers.Book.CreateBooks(c.Request.Context(), bookSpecInstences)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		/* 		c.JSON(http.StatusBadRequest, gin.H{
 			"code":    http.StatusBadRequest,
 			"message": err.Error(),
-		})
+		}) */
+		response.Failed(c, err)
 		return
+	} else {
+		response.OK(c, book)
 	}
 	// 如果保存成功就返回创建的书籍属性信息。
-	c.JSON(http.StatusCreated, gin.H{
+	/* 	c.JSON(http.StatusCreated, gin.H{
 		"code": http.StatusCreated,
 		"data": book,
-	})
+	}) */
 
 }
 
@@ -124,18 +136,23 @@ func (h *BookApiHandler) getBook(c *gin.Context) {
 	// }
 	bnInt, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		c.JSON(400, gin.H{"code": 400, "message": err.Error()})
+		response.Failed(c, err)
+		//c.JSON(400, gin.H{"code": 400, "message": err.Error()})
 		return
 	}
 
 	book, err := controllers.Book.GetBooks(c, controllers.NewGetBookRequest(int(bnInt)))
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{
+		/* 		c.JSON(http.StatusNotFound, gin.H{
 			"code":    http.StatusNotFound,
 			"message": err.Error(),
-		})
+		}) */
+		response.Failed(c, err)
+	} else {
+		response.OK(c, book)
 	}
-	c.JSON(http.StatusOK, book)
+
+	//c.JSON(http.StatusOK, book)
 }
 
 func (h *BookApiHandler) updateBook(c *gin.Context) {
@@ -143,10 +160,11 @@ func (h *BookApiHandler) updateBook(c *gin.Context) {
 	isbnStr := c.Param("id")
 	isbn, err := strconv.ParseInt(isbnStr, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		/* 		c.JSON(http.StatusBadRequest, gin.H{
 			"code":    http.StatusBadRequest,
 			"message": "Invalid ISBN",
-		})
+		}) */
+		response.Failed(c, err)
 		return
 	}
 
@@ -157,36 +175,47 @@ func (h *BookApiHandler) updateBook(c *gin.Context) {
 	}
 
 	if err := c.BindJSON(&bookInstance.BookSpec); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		/* 		c.JSON(http.StatusBadRequest, gin.H{
 			"code":    http.StatusBadRequest,
 			"message": err.Error(),
-		})
+		}) */
+
+		response.Failed(c, err)
 		return
 	}
 
 	if err := config.DB().Where("id = ?", bookInstance.Id).Updates(bookInstance).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		/* 		c.JSON(http.StatusInternalServerError, gin.H{
 			"code":    http.StatusInternalServerError,
 			"message": err.Error(),
-		})
+		}) */
+		response.Failed(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, bookInstance)
+	//c.JSON(http.StatusOK, bookInstance)
+	response.OK(c, bookInstance)
 }
 
 func (h BookApiHandler) deleteBook(c *gin.Context) {
 	if err := config.DB().Where("id = ?", c.Param("id")).Delete(&models.Book{}).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		/* 		c.JSON(http.StatusInternalServerError, gin.H{
 			"code":    http.StatusInternalServerError,
 			"message": "Failed to delete book",
-		})
+		}) */
+		response.Failed(c, err)
 		return
+	} else {
+		response.OK(c, gin.H{
+			"code": http.StatusOK,
+			"data": "Book deleted successfully",
+		})
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	/* 	c.JSON(http.StatusOK, gin.H{
 		"code": http.StatusOK,
 		"data": "Book deleted successfully",
-	})
+	}) */
+
 }
 
 // 注册路由

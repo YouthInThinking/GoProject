@@ -1,1 +1,8 @@
 {"level":"error","caller":"/Users/youtharethinking/Documents/go_Project/project/GoProject/book/v3/controllers/book.go:30","time":"2025-05-24T15:00:48+08:00","message":"GetBooks: 3"}
+{"level":"error","caller":"/Users/youtharethinking/Documents/go_Project/project/GoProject/book/v3/controllers/book.go:32","time":"2025-05-24T20:50:20+08:00","message":"GetBooks: 3"}
+{"level":"error","caller":"/Users/youtharethinking/Documents/go_Project/project/GoProject/book/v3/controllers/book.go:32","time":"2025-05-24T20:50:41+08:00","message":"GetBooks: 5"}
+{"level":"error","caller":"/Users/youtharethinking/Documents/go_Project/project/GoProject/book/v3/controllers/book.go:32","time":"2025-05-24T20:50:44+08:00","message":"GetBooks: 9"}
+{"level":"error","caller":"/Users/youtharethinking/Documents/go_Project/project/GoProject/book/v3/controllers/book.go:32","time":"2025-05-24T20:52:53+08:00","message":"GetBooks: 9"}
+{"level":"error","caller":"/Users/youtharethinking/Documents/go_Project/project/GoProject/book/v3/controllers/book.go:32","time":"2025-05-24T20:55:50+08:00","message":"GetBooks: 9"}
+{"level":"error","caller":"/Users/youtharethinking/Documents/go_Project/project/GoProject/book/v3/controllers/book.go:32","time":"2025-05-24T20:57:13+08:00","message":"GetBooks: 9"}
+{"level":"error","caller":"/Users/youtharethinking/Documents/go_Project/project/GoProject/book/v3/controllers/book.go:32","time":"2025-05-24T20:59:38+08:00","message":"GetBooks: 9"}

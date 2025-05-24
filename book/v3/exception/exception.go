@@ -52,9 +52,9 @@ func (e *ApiException) WithHttpCode(httpCode int) *ApiException {
 
 // 通过Code来比较错误
 func IsApiException(err error, code int) bool {
-	var arrErr *ApiException
-	if err != nil && errors.As(err, &arrErr) {
-		return arrErr.Code == code
+	var apiErr *ApiException
+	if err != nil && errors.As(err, &apiErr) {
+		return apiErr.Code == code
 	}
 	return false
 
