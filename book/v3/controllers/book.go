@@ -5,7 +5,9 @@ import (
 	"fmt"
 
 	"github.com/YouthInThinking/GoProject/book/v3/config"
+	"github.com/YouthInThinking/GoProject/book/v3/exception"
 	"github.com/YouthInThinking/GoProject/book/v3/models"
+	"gorm.io/gorm"
 )
 
 var Book = &BookController{}
@@ -38,7 +40,14 @@ func (c *BookController) GetBooks(ctx context.Context, in *GetBookRequest) (*mod
 
 	bookInstence := &models.Book{}
 	if err := config.DB().Where("id = ?", in.BookNumber).First(bookInstence).Error; err != nil {
-		return nil, err
+
+		if err == gorm.ErrRecordNotFound {
+			return nil, exception.ErrNotFound("Book not found with id %d", in.BookNumber)
+		} else if err == gorm.ErrInvalidValue {
+			return nil, exception.ErrValidation("Invalid value for field %d", in.BookNumber)
+		} else {
+			return nil, err
+		}
 	}
 
 	return bookInstence, nil
