@@ -35,6 +35,7 @@ func (c *BookController) GetBooks(ctx context.Context, in *GetBookRequest) (*mod
 	// 验证配置
 	config.L().Info().Msg("logger initialization completed")
 	fmt.Printf("日志级别为：%v\n", config.C().Log.Level)
+
 	bookInstence := &models.Book{}
 	if err := config.DB().Where("id = ?", in.BookNumber).First(bookInstence).Error; err != nil {
 		return nil, err
@@ -42,4 +43,15 @@ func (c *BookController) GetBooks(ctx context.Context, in *GetBookRequest) (*mod
 
 	return bookInstence, nil
 
+}
+
+func (c *BookController) CreateBooks(ctx context.Context, in *models.BookSpec) (*models.Book, error) {
+	bookInstance := &models.Book{
+		BookSpec: *in,
+	}
+	// 数据入库(Grom), 补充自增Id的值
+	if err := config.DB().Save(&bookInstance).Error; err != nil {
+		return nil, err
+	}
+	return bookInstance, nil
 }

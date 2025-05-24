@@ -9,10 +9,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func main() {
-
-	server := gin.Default()
+func init() {
 	if err := config.LoadConfigFromYaml("application.yaml"); err != nil {
+
 		panic(err)
 	}
 	config.LoadConfigFromEnv()
@@ -23,6 +22,10 @@ func main() {
 
 	fmt.Printf("Loaded Config:\n%s\n", config.C().String())
 	logger.Info().Msg("Configuration loaded")
+}
+func main() {
+
+	server := gin.Default()
 	handlers.Book.Registry(server)
 	if err := server.Run(":8080"); err != nil {
 		fmt.Println(err.Error())
