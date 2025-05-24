@@ -95,22 +95,19 @@ func (h *BookApiHandler) createBook(c *gin.Context) {
 		})
 		return
 	}
-	// 创建一个Book对象实例,将bookSpecInstences实例信息保存值Book对象中
-	bookInstences := &models.Book{BookSpec: *bookSpecInstences}
 
-	// 将Book对象实例保存到数据库中。如果保存失败，就返回错误信息。
-	if err := config.DB().Save(&bookInstences).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"code":    http.StatusInternalServerError,
-			"message": err,
+	book, err := controllers.Book.CreateBooks(c.Request.Context(), bookSpecInstences)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"code":    http.StatusBadRequest,
+			"message": err.Error(),
 		})
 		return
 	}
-
 	// 如果保存成功就返回创建的书籍属性信息。
 	c.JSON(http.StatusCreated, gin.H{
 		"code": http.StatusCreated,
-		"data": bookInstences,
+		"data": book,
 	})
 
 }

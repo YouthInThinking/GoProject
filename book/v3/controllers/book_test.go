@@ -8,6 +8,7 @@ import (
 
 	"github.com/YouthInThinking/GoProject/book/v3/config"
 	"github.com/YouthInThinking/GoProject/book/v3/controllers"
+	"github.com/YouthInThinking/GoProject/book/v3/models"
 )
 
 func init() {
@@ -33,4 +34,18 @@ func TestBooks(t *testing.T) {
 	}
 	t.Logf("Book: %v", book)
 
+}
+
+func TestCreateBook(t *testing.T) {
+	book, err := controllers.Book.CreateBooks(context.Background(), &models.BookSpec{
+		Title:  "Unit Test Book for go Controller test",
+		Author: "Test Author",
+		Price:  99.99,
+		IsSale: nil, // Add this line to fix the missing field error
+	})
+
+	if err != nil {
+		t.Fatal("not implemented", err)
+	}
+	t.Logf("Book: %v", book)
 }
